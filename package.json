@@ -1,0 +1,52 @@
+{
+  "name": "nstate",
+  "version": "0.0.0",
+  "description": "A simple react state management library with low mental load.",
+  "main": "./lib/index.js",
+  "typings": "./lib/index",
+  "types": "./lib/index",
+  "sideEffects": false,
+  "scripts": {
+    "build": "foy build",
+    "test": "foy test"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaaack/nstate.git"
+  },
+  "keywords": [
+    "react",
+    "state",
+    "state-management",
+    "store"
+  ],
+  "author": "Zack Young",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zaaack/nstate/issues"
+  },
+  "homepage": "https://github.com/zaaack/nstate#readme",
+  "devDependencies": {
+    "@testing-library/react-hooks": "^7.0.2",
+    "@types/jasmine": "^3.9.1",
+    "@types/node": "^16.11.0",
+    "foy": "^0.2.12",
+    "jasmine": "^3.10.0",
+    "react": "^17.0.2",
+    "react-test-renderer": "^17.0.2",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.4"
+  },
+  "dependencies": {
+    "immer": "^9.0.6",
+    "mitt": "^3.0.0",
+    "shallow-equal": "^1.2.1",
+    "tslib": "^2.3.1"
+  },
+  "peerDependencies": {
+    "react": "^17.0.2"
+  }
+}
