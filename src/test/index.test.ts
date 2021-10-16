@@ -13,7 +13,7 @@ class Counter extends NanoState<State> {
     this.setState({ counter: value })
   }
   setCounterByDraft(value: number) {
-    this.setStateByDraft(draft => {
+    this.setState(draft => {
       draft.counter = value
     })
   }
@@ -26,7 +26,7 @@ class Counter extends NanoState<State> {
     })
   }
   setDeepCcByDraft(value: string) {
-    this.setStateByDraft(draft => {
+    this.setState(draft => {
       draft.deep.bb.cc = value
     })
   }
@@ -51,7 +51,7 @@ describe('test setState', () => {
     deepEqual(counter.state.deep.aa, 0, '4')
     deepEqual(counter.state.deep.bb.cc, 'ccc', '5')
   })
-  it('setStateByDraft', () => {
+  it('setState', () => {
     const counter = new Counter({
       counter: 0,
       deep: {

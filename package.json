@@ -21,7 +21,8 @@
     "react",
     "state",
     "state-management",
-    "store"
+    "store",
+    "immer"
   ],
   "author": "Zack Young",
   "license": "MIT",

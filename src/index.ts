@@ -4,10 +4,20 @@ import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 
 setAutoFreeze(false)
-type Patch<T> = Partial<T> | ((s: T) => Partial<T>)
+type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
 export interface Options {
   name?: string
   debug?: boolean
+}
+
+let defaultDebug = false
+/**
+ * set default debug option
+ * @param debug
+ * @returns
+ */
+export function setDebug(debug: boolean) {
+  defaultDebug = debug
 }
 
 const handlerWrapperSymbol =
@@ -21,18 +31,35 @@ export class NanoState<T> {
 
   constructor(public state: T, name?: string | Options) {
     if (typeof name === 'string') {
-      this._options = { name }
+      this._options = { name, debug: defaultDebug }
     } else if (name) {
-      this._options = name
+      this._options = {
+        debug: defaultDebug,
+        ...name,
+      }
     }
   }
-
+  /**
+   * setState by partialState/updater/immer draft
+   * @param patch
+   * @example
+   * state={aa:1, bb: 'aa', cc: { dd: 1 }}
+   * // 1. partialState
+   * this.setState({ aa: 2 }) // {aa:2, bb: 'aa', cc: { dd: 1 }}
+   * // 2. updater
+   * this.setState(s => ({ aa: s.aa+1 })) // {aa:3, bb: 'aa', cc: { dd: 1 }}
+   * // 3. immer draft, for more plz see: https://immerjs.github.io/immer
+   * this.setState(draft => {
+   *    draft.cc.dd=2
+   * }) // {aa:3, bb: 'aa', cc: { dd: 2 }}
+   */
   protected setState(patch: Patch<T>) {
-    if (typeof patch === 'function') {
-      patch = patch(this.state)
-    }
     let old = this.state
-    this.state = { ...this.state, ...patch }
+    if (typeof patch === 'function') {
+      this.state = {...old, ...immer(this.state, patch)}
+    } else {
+      this.state = { ...this.state, ...patch }
+    }
     this.events.emit('change', { patch, old })
     if (this._options.debug) {
       const storeName = this.constructor.name + (this._options.name ? '-' + this._options.name : '')
@@ -41,13 +68,7 @@ export class NanoState<T> {
       console.log(`\n%c[${storeName}] after:`, 'color:#17aac2;', this.state)
     }
   }
-  /**
-   * using immer under the hood
-   * @param draft
-   */
-  protected setStateByDraft(draft: (draft: T) => void) {
-    this.setState(immer(this.state, draft))
-  }
+
   /**
    * Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equal
    * @param getter get deep state
