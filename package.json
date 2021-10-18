@@ -1,6 +1,6 @@
 {
   "name": "nstate",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A simple react state management library with low mental load.",
   "main": "./lib/index.js",
   "typings": "./lib/index",
