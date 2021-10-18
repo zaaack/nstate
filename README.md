@@ -14,7 +14,7 @@ A simple but powerful react state management library with low mental load, inspi
   - [Install](#install)
   - [Usage](#usage)
     - [1. Counter example](#1-counter-example)
-    - [2. Combile multiple store to reuse actions/views](#2-combile-multiple-store-to-reuse-actionsviews)
+    - [2. Combine multiple store to reuse actions/views](#2-combine-multiple-store-to-reuse-actionsviews)
   - [API](#api)
   - [License](#license)
 
@@ -25,6 +25,7 @@ A simple but powerful react state management library with low mental load, inspi
 * Auto bind action methods
 * Combine stores and reuse actions/views
 * Watch store changes
+* Shipped with [immer](https://immerjs.github.io/immer/) for nested state updating
 
 
 ## Install
@@ -38,7 +39,7 @@ yarn add nstate # or npm i nstate
 ### 1. Counter example
 
 ```tsx
-import NState, { setDebug } from '../../src'
+import NState, { setDebug } from 'nstate'
 import React from 'react'
 
 setDebug(true) // enable debug log
@@ -89,15 +90,14 @@ function Counter({ store = counterStore }: { store?: CounterStore }) {
 export default Counter
 ```
 
-### 2. Combile multiple store to reuse actions/views
+### 2. Combine multiple store to reuse actions/views
 
 ```tsx
-import NState, { setDebug } from '../../src'
+import NState, { setDebug } from 'nstate'
 import React from 'react'
 import Counter, {CounterStore} from './Counter';
 
 setDebug(true) // enable debug log
-
 interface Store {
   nest: {
     aa: string,
@@ -129,7 +129,7 @@ export class CombineStore extends NState<Store> {
   }
 }
 
-export const nestStore = new CombineStore({ // optional initial state
+export const nestStore = new CombineStore({ // initial state
   nest: {aa: 'aa', bb: 'bb'},
 })
 
