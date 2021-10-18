@@ -26,8 +26,8 @@ const handlerWrapperSymbol =
 function bindClass(ins) {
   let parent = ins
   while (parent) {
-    Object.getOwnPropertyNames(parent).forEach(key => {
-      if (typeof ins[key] === 'function') {
+    Object.getOwnPropertyNames(parent).forEach((key) => {
+      if (typeof ins[key] === 'function' && key !== 'constructor') {
         ins[key] = ins[key].bind(ins)
       }
     })
@@ -37,7 +37,7 @@ function bindClass(ins) {
 
 export default class NState<T> {
   protected events = mitt<{
-    change: { patch: any, old: T }
+    change: { patch: any; old: T }
   }>()
   private _options: Options = {}
 
@@ -56,7 +56,7 @@ export default class NState<T> {
     })
   }
 
-  protected onInit() { }
+  protected onInit() {}
   /**
    * setState by partialState/updater/immer draft
    * @param patch
@@ -74,7 +74,7 @@ export default class NState<T> {
   protected setState(patch: Patch<T>) {
     let old = this.state
     if (typeof patch === 'function') {
-      this.state = {...old, ...immer(this.state, patch)}
+      this.state = { ...old, ...immer(this.state, patch) }
     } else {
       this.state = { ...this.state, ...patch }
     }
@@ -104,7 +104,7 @@ export default class NState<T> {
         } else {
           isChanged = !shallowEqualArrays(newState, oldState)
         }
-      } else if(typeof newState === 'object' && newState !== null) {
+      } else if (typeof newState === 'object' && newState !== null) {
         isChanged = !shallowEqualObjects(newState, oldState)
       } else {
         isChanged = newState !== oldState
