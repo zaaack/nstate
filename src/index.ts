@@ -23,13 +23,25 @@ export function setDebug(debug: boolean) {
 const handlerWrapperSymbol =
   typeof Symbol === 'undefined' ? '__HANDLER_WRAPPER__' : Symbol('handler-wrapper')
 
-export class NanoState<T> {
+function bindClass(ins) {
+  let parent = ins
+  while (parent) {
+    Object.getOwnPropertyNames(parent).forEach(key => {
+      if (typeof ins[key] === 'function') {
+        ins[key] = ins[key].bind(ins)
+      }
+    })
+    parent = Object.getPrototypeOf(parent)
+  }
+}
+
+export default class NState<T> {
   protected events = mitt<{
     change: { patch: any, old: T }
   }>()
   private _options: Options = {}
 
-  constructor(public state: T, name?: string | Options) {
+  constructor(protected state: T, name?: string | Options) {
     if (typeof name === 'string') {
       this._options = { name, debug: defaultDebug }
     } else if (name) {
@@ -38,7 +50,13 @@ export class NanoState<T> {
         ...name,
       }
     }
+    bindClass(this)
+    setTimeout(() => {
+      this.onInit()
+    })
   }
+
+  protected onInit() { }
   /**
    * setState by partialState/updater/immer draft
    * @param patch

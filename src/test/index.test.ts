@@ -1,4 +1,4 @@
-import { NanoState } from '..'
+import NState from '..'
 import { deepEqual } from 'assert'
 import { renderHook } from '@testing-library/react-hooks'
 interface State {
@@ -8,7 +8,12 @@ interface State {
     bb: { cc: string }
   }
 }
-class Counter extends NanoState<State> {
+class Counter extends NState<State> {
+
+  getState() {
+    return this.state
+  }
+
   setCounter(value: number) {
     this.setState({ counter: value })
   }
@@ -20,7 +25,7 @@ class Counter extends NanoState<State> {
   setDeepCc(value: string) {
     this.setState({
       deep: {
-        ...this.state.deep,
+        ...this.getState().deep,
         bb: { cc: value },
       },
     })
@@ -40,16 +45,16 @@ describe('test setState', () => {
         bb: { cc: 'cc' },
       },
     })
-    const initialState: State = JSON.parse(JSON.stringify(counter.state))
-    console.log('counter.state', counter.state)
+    const initialState: State = JSON.parse(JSON.stringify(counter.getState()))
+    console.log('counter.getState()', counter.getState())
     counter.setCounter(1)
-    console.log('counter.state', counter.state)
-    deepEqual(counter.state.counter, 1, '1')
-    deepEqual(counter.state.deep, initialState.deep, '2')
+    console.log('counter.getState()', counter.getState())
+    deepEqual(counter.getState().counter, 1, '1')
+    deepEqual(counter.getState().deep, initialState.deep, '2')
     counter.setDeepCc('ccc')
-    deepEqual(counter.state.counter, 1, '3')
-    deepEqual(counter.state.deep.aa, 0, '4')
-    deepEqual(counter.state.deep.bb.cc, 'ccc', '5')
+    deepEqual(counter.getState().counter, 1, '3')
+    deepEqual(counter.getState().deep.aa, 0, '4')
+    deepEqual(counter.getState().deep.bb.cc, 'ccc', '5')
   })
   it('setState', () => {
     const counter = new Counter({
@@ -59,14 +64,14 @@ describe('test setState', () => {
         bb: { cc: 'cc' },
       },
     })
-    const initialState: State = JSON.parse(JSON.stringify(counter.state))
-    deepEqual(counter.state.counter, 0, '1')
+    const initialState: State = JSON.parse(JSON.stringify(counter.getState()))
+    deepEqual(counter.getState().counter, 0, '1')
     counter.setCounterByDraft(1)
-    deepEqual(counter.state.counter, 1, '2')
-    deepEqual(counter.state.deep, initialState.deep, '3')
-    deepEqual(counter.state.deep.bb.cc, 'cc', '4')
+    deepEqual(counter.getState().counter, 1, '2')
+    deepEqual(counter.getState().deep, initialState.deep, '3')
+    deepEqual(counter.getState().deep.bb.cc, 'cc', '4')
     counter.setDeepCcByDraft('ccc')
-    deepEqual(counter.state.deep.bb.cc, 'ccc', '5')
+    deepEqual(counter.getState().deep.bb.cc, 'ccc', '5')
   })
 
   it('watch', async () => {
