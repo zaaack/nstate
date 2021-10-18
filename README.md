@@ -2,7 +2,7 @@
 
 [![publish](https://github.com/zaaack/nstate/actions/workflows/publish.yml/badge.svg)](https://github.com/zaaack/nstate/actions/workflows/publish.yml) [![npm](https://img.shields.io/npm/v/nstate.svg)](https://www.npmjs.com/package/nstate) [![npm](https://img.shields.io/npm/dm/nstate.svg)](https://www.npmjs.com/package/nstate)
 
-A simple but powerful react state management library with low mental load, impired by [rko](https://github.com/steveruizok/rko).
+A simple but powerful react state management library with low mental load, inspired by [rko](https://github.com/steveruizok/rko).
 
 > nstate = nano state / next state
 
