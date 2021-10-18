@@ -18,6 +18,6 @@ task<{ type: string }>('publish', async (ctx) => {
     'foy build',
     `npm version ${ctx.options.type || 'patch'}`,
     'npm publish --registry=https://registry.npmjs.org/ --access public',
-    'git push upstream master --tags',
+    'git push origin master --tags',
   ])
 })
