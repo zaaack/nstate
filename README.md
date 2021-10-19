@@ -27,6 +27,8 @@ A simple but powerful react state management library with low mental load, inspi
 * Combine stores and reuse actions/views
 * Watch store changes
 * Shipped with [immer](https://immerjs.github.io/immer/) for nested state updating
+* Bind state field to form input with value/onChange/defaultValue
+* Flexible, you can customize all internal methods by override.
 
 
 ## Install
@@ -210,6 +212,7 @@ export default class NState<T> {
   watch<U>(getter: (s: T) => U, handler: (s: U) => void) // Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equals
   useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
   useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
+  bind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
 }
 ```
 
