@@ -140,6 +140,10 @@ function Combine() {
   // const {aa, bb} = nestStore.useState(s => ({aa: s.nest.aa, bb: s.nest.bb}))
   const inp1Ref = React.useRef<HTMLInputElement>(null)
   const inp2Ref = React.useRef<HTMLInputElement>(null)
+  // watch hooks wrapper for auto remove handler after unmount
+  nestStore.useWatch(s => [s.nest.aa, s.nest.bb], [aa, bb] => {
+    // do something when state changes
+  })
   return (
     <div>
       <div>
@@ -188,6 +192,7 @@ export default class NState<T> {
   protected setState(patch: (s: T) => Partial<T>)
   protected setState(patch: (draft: T) => void) // using immer under the hood
   watch<U>(getter: (s: T) => U, handler: (s: U) => void) // Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equals
+  useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
   useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
 }
 ```

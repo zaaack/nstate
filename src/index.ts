@@ -121,6 +121,20 @@ export default class NState<T> {
     this.events.off('change', handler[handlerWrapperSymbol])
   }
   /**
+   * watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
+   * @param getter
+   * @param handler
+   * @param deps
+   */
+  useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps: any[] = []) {
+    useEffect(() => {
+      this.watch(getter, handler)
+      return () => {
+        this.unwatch(handler)
+      }
+    }, deps)
+  }
+  /**
    * use deep state or construct
    * @param getter
    * @returns
