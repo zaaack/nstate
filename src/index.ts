@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 
@@ -35,13 +35,13 @@ function bindClass(ins) {
   }
 }
 
-export default class NState<T> {
+export default class NState<S> {
   protected events = mitt<{
-    change: { patch: any; old: T }
+    change: { patch: any; old: S }
   }>()
   private _options: Options = {}
 
-  constructor(protected state: T, name?: string | Options) {
+  constructor(protected state: S, name?: string | Options) {
     if (typeof name === 'string') {
       this._options = { name, debug: defaultDebug }
     } else if (name) {
@@ -71,7 +71,7 @@ export default class NState<T> {
    *    draft.cc.dd=2
    * }) // {aa:3, bb: 'aa', cc: { dd: 2 }}
    */
-  protected setState(patch: Patch<T>) {
+  protected setState(patch: Patch<S>) {
     let old = this.state
     if (typeof patch === 'function') {
       this.state = { ...old, ...immer(this.state, patch) }
@@ -92,7 +92,7 @@ export default class NState<T> {
    * @param getter get deep state
    * @param handler handle deep state change
    */
-  watch<U>(getter: (s: T) => U, handler: (s: U) => void) {
+  watch<U>(getter: (s: S) => U, handler: (s: U) => void) {
     const diff = ({ patch, old }) => {
       let newState = getter(this.state)
       let oldState = getter(old)
@@ -126,7 +126,7 @@ export default class NState<T> {
    * @param handler
    * @param deps
    */
-  useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps: any[] = []) {
+  useWatch<U>(getter: (s: S) => U, handler: (s: U) => void, deps: any[] = []) {
     useEffect(() => {
       this.watch(getter, handler)
       return () => {
@@ -139,12 +139,35 @@ export default class NState<T> {
    * @param getter
    * @returns
    */
-  useState<U>(getter: (s: T) => U) {
+  useState<U>(getter: (s: S) => U) {
     const [state, setState] = useState<U>(getter(this.state))
     useEffect(() => {
       this.watch(getter, setState)
       return () => this.unwatch(setState)
     }, [])
     return state
+  }
+  /**
+   * bind state to form input component with value/onChange/defaultValue
+   * @param getter
+   * @param key
+   * @returns
+   */
+  bind<U>(getter: (s: S) => U) {
+    return <K extends keyof U>(key: K, transformer: (v: string) => U[K] = (f) => f as any) => {
+      const s = getter(this.state)
+      return {
+        defaultValue: s?.[key],
+        value: s?.[key],
+        onChange: (e: any) => {
+          this.setState((d) => {
+            const value = ['checkbox', 'radio'].includes(e?.target?.type)
+              ? e.target.checked
+              : e?.target?.value ?? e
+            getter(d)[key] = transformer(value)
+          })
+        },
+      }
+    }
   }
 }

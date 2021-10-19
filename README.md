@@ -14,7 +14,8 @@ A simple but powerful react state management library with low mental load, inspi
   - [Install](#install)
   - [Usage](#usage)
     - [1. Counter example](#1-counter-example)
-    - [2. Combine multiple store to reuse actions/views](#2-combine-multiple-store-to-reuse-actionsviews)
+    - [2. Bind state field to form input with onChange/value` with type safety](#2-bind-state-field-to-form-input-with-onchangevalue-with-type-safety)
+    - [3. Combine multiple store to reuse actions/views](#3-combine-multiple-store-to-reuse-actionsviews)
   - [API](#api)
   - [License](#license)
 
@@ -90,7 +91,24 @@ function Counter({ store = counterStore }: { store?: CounterStore }) {
 export default Counter
 ```
 
-### 2. Combine multiple store to reuse actions/views
+
+### 2. Bind state field to form input with onChange/value` with type safety
+
+```tsx
+function Counter() {
+  const count = counterStore.useState(s => s.count)
+  const bind = counterStore.bind(s => s) // you can also bind nested object with (s => s.xx.aa)
+  return (
+    <div>
+      count: {count}
+      <input type="text" {...bind('count', Number)} />
+    </div>
+  )
+}
+
+```
+
+### 3. Combine multiple store to reuse actions/views
 
 ```tsx
 import NState, { setDebug } from 'nstate'
@@ -116,13 +134,11 @@ export class CombineStore extends NState<Store> {
   }
 
   updateAA(aa: string) {
-    // setState by immer draft (using immer under the hood)
     this.setState(draft => {
       draft.nest.aa = aa
     })
   }
   updateBB(bb: string) {
-    // setState by immer draft (using immer under the hood)
     this.setState(draft => {
       draft.nest.bb = bb
     })

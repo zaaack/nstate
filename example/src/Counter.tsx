@@ -32,6 +32,7 @@ export const counterStore = new CounterStore({ // optional initial state
 
 function Counter({ store = counterStore }: { store?: CounterStore }) {
   const count = store.useState(s => s.count)
+  const bind = store.bind(s => s)
   return (
     <div>
       <div>
@@ -40,6 +41,7 @@ function Counter({ store = counterStore }: { store?: CounterStore }) {
         <button onClick={store.inc}>+</button>
         <button onClick={store.dec}>-</button>
         <button onClick={e=>store.set(0)}>reset</button>
+        <input type="text" {...bind('count', Number)} />
       </div>
     </div>
   )
