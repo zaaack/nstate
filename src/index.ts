@@ -157,8 +157,8 @@ export default class NState<S> {
     return <K extends keyof U>(key: K, transformer: (v: string) => U[K] = (f) => f as any) => {
       const s = getter(this.state)
       return {
-        defaultValue: s?.[key],
-        value: s?.[key],
+        defaultValue: s[key],
+        value: s[key],
         onChange: (e: any) => {
           this.setState((d) => {
             const value = ['checkbox', 'radio'].includes(e?.target?.type)
