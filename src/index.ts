@@ -153,9 +153,9 @@ export default class NState<S> {
    * @param key
    * @returns
    */
-  bind<U>(getter: (s: S) => U) {
+  useBind<U>(getter: (s: S) => U) {
+    const s = this.useState(getter)
     return <K extends keyof U>(key: K, transformer: (v: string) => U[K] = (f) => f as any) => {
-      const s = getter(this.state)
       return {
         defaultValue: s[key],
         value: s[key],

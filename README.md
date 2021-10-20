@@ -12,11 +12,11 @@ A simple but powerful react state management library with low mental load, inspi
   - [Contents](#contents)
   - [Features](#features)
   - [Install](#install)
+  - [API](#api)
   - [Usage](#usage)
     - [1. Counter example](#1-counter-example)
     - [2. Bind state field to form input with onChange/value` with type safety](#2-bind-state-field-to-form-input-with-onchangevalue-with-type-safety)
     - [3. Combine multiple store to reuse actions/views](#3-combine-multiple-store-to-reuse-actionsviews)
-  - [API](#api)
   - [License](#license)
 
 ## Features
@@ -37,6 +37,28 @@ A simple but powerful react state management library with low mental load, inspi
 yarn add nstate # or npm i nstate
 ```
 
+
+## API
+
+```ts
+export function setDebug(boolean):void // enable debug log
+
+export default class NState<T> {
+  protected state<T>
+  protected events: Emitter<{
+    change: { patch: any, old: T }
+  }> // internal change events
+  constructor(initialState: T, nameOrOptions?: string | { name: string, debug: boolean})
+  protected onInit()
+  protected setState(patch: Partial<T>)
+  protected setState(patch: (s: T) => Partial<T>)
+  protected setState(patch: (draft: T) => void) // using immer under the hood
+  watch<U>(getter: (s: T) => U, handler: (s: U) => void) // Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equals
+  useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
+  useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
+  useBind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
+}
+```
 ## Usage
 
 ### 1. Counter example
@@ -99,7 +121,7 @@ export default Counter
 ```tsx
 function Counter() {
   const count = counterStore.useState(s => s.count)
-  const bind = counterStore.bind(s => s) // you can also bind nested object with (s => s.xx.aa)
+  const bind = counterStore.useBind(s => s) // you can also bind nested object with (s => s.xx.aa)
   return (
     <div>
       count: {count}
@@ -191,29 +213,6 @@ function Combine() {
 }
 
 export default Combine
-```
-
-
-## API
-
-```ts
-export function setDebug(boolean):void // enable debug log
-
-export default class NState<T> {
-  protected state<T>
-  protected events: Emitter<{
-    change: { patch: any, old: T }
-  }> // internal change events
-  constructor(initialState: T, nameOrOptions?: string | { name: string, debug: boolean})
-  protected onInit()
-  protected setState(patch: Partial<T>)
-  protected setState(patch: (s: T) => Partial<T>)
-  protected setState(patch: (draft: T) => void) // using immer under the hood
-  watch<U>(getter: (s: T) => U, handler: (s: U) => void) // Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equals
-  useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
-  useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
-  bind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
-}
 ```
 
 ## License

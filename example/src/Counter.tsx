@@ -32,7 +32,7 @@ export const counterStore = new CounterStore({ // optional initial state
 
 function Counter({ store = counterStore }: { store?: CounterStore }) {
   const count = store.useState(s => s.count)
-  const bind = store.bind(s => s)
+  const bind = store.useBind(s => s)
   return (
     <div>
       <div>
