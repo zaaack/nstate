@@ -4,7 +4,8 @@ import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 
 setAutoFreeze(false)
-type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
+export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
+export type WatchHandler<U> = (newState: U, oldState: U) => void
 export interface Options {
   name?: string
   debug?: boolean
@@ -92,7 +93,7 @@ export default class NState<S> {
    * @param getter get deep state
    * @param handler handle deep state change
    */
-  watch<U>(getter: (s: S) => U, handler: (s: U) => void) {
+  watch<U>(getter: (s: S) => U, handler: WatchHandler<U>) {
     const diff = ({ patch, old }) => {
       let newState = getter(this.state)
       let oldState = getter(old)
@@ -110,14 +111,14 @@ export default class NState<S> {
         isChanged = newState !== oldState
       }
       if (isChanged) {
-        handler(newState)
+        handler(newState, oldState)
       }
     }
     handler[handlerWrapperSymbol] = diff
     this.events.on('change', diff)
   }
 
-  unwatch<U>(handler: (s: U) => void) {
+  unwatch<U>(handler: WatchHandler<U>) {
     this.events.off('change', handler[handlerWrapperSymbol])
   }
   /**
@@ -126,7 +127,7 @@ export default class NState<S> {
    * @param handler
    * @param deps
    */
-  useWatch<U>(getter: (s: S) => U, handler: (s: U) => void, deps: any[] = []) {
+  useWatch<U>(getter: (s: S) => U, handler: WatchHandler<U>, deps: any[] = []) {
     useEffect(() => {
       this.watch(getter, handler)
       return () => {
@@ -141,10 +142,7 @@ export default class NState<S> {
    */
   useState<U>(getter: (s: S) => U) {
     const [state, setState] = useState<U>(getter(this.state))
-    useEffect(() => {
-      this.watch(getter, setState)
-      return () => this.unwatch(setState)
-    }, [])
+    this.useWatch(getter, setState)
     return state
   }
   /**
@@ -154,7 +152,7 @@ export default class NState<S> {
    * @returns
    */
   useBind<U>(getter: (s: S) => U) {
-    const s = this.useState(getter) || {} as U
+    const s = this.useState(getter) || ({} as U)
     return <K extends keyof U>(key: K, transformer: (v: string) => U[K] = (f) => f as any) => {
       return {
         defaultValue: s[key],
