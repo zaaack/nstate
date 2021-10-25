@@ -17,6 +17,7 @@ A simple but powerful react state management library with low mental load, inspi
     - [1. Counter example](#1-counter-example)
     - [2. Bind state field to form input with onChange/value` with type safety](#2-bind-state-field-to-form-input-with-onchangevalue-with-type-safety)
     - [3. Combine multiple store to reuse actions/views](#3-combine-multiple-store-to-reuse-actionsviews)
+    - [4. useLocalStore](#4-uselocalstore)
   - [License](#license)
 
 ## Features
@@ -57,7 +58,10 @@ export default class NState<T> {
   useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
   useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
   useBind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
+  useRef<U>(getter: (s: T) => U): U // use state but won't update view
 }
+
+export function useLocalStore<T, U>(state: T, actions: (store: LocalStore<T>) => U): [T, LocalStore<T> & U]
 ```
 ## Usage
 
@@ -213,6 +217,28 @@ function Combine() {
 }
 
 export default Combine
+```
+
+### 4. useLocalStore
+
+```tsx
+function CounterWithLocalStore() {
+  const [count, store] = useLocalStore(0, store => ({
+    inc: () => store.setState(s => s + 1),
+    dec: () => store.setState(s => s - 1),
+  }))
+  return (
+    <div>
+      <div>
+        <h2>Counter with useLocalStore</h2>
+        <p>count: {count}</p>
+        <button onClick={store.inc}>+</button>
+        <button onClick={store.dec}>-</button>
+        <button onClick={e=>store.setState(0)}>reset</button>
+      </div>
+    </div>
+  )
+}
 ```
 
 ## License

@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 
@@ -74,10 +74,14 @@ export default class NState<S> {
    */
   protected setState(patch: Patch<S>) {
     let old = this.state
-    if (typeof patch === 'function') {
-      this.state = { ...old, ...immer(this.state, patch) }
+    if (typeof old !== 'object' || typeof old === 'function') {
+      this.state = patch as any
     } else {
-      this.state = { ...this.state, ...patch }
+      if (typeof patch === 'function') {
+        this.state = { ...old, ...immer(this.state, patch) }
+      } else {
+        this.state = { ...this.state, ...patch }
+      }
     }
     this.events.emit('change', { patch, old })
     if (this._options.debug) {
@@ -140,10 +144,18 @@ export default class NState<S> {
    * @param getter
    * @returns
    */
-  useState<U>(getter: (s: S) => U) {
+  useState<U>(getter: (s: S) => U, deps: any[] = []) {
     const [state, setState] = useState<U>(getter(this.state))
-    this.useWatch(getter, setState)
+    this.useWatch(getter, setState, deps)
     return state
+  }
+  /**
+   * return the reference of state, unlike useState, it won't refresh view when state changed
+   * @param getter
+   * @returns
+   */
+  useRef<U>(getter: (s: S) => U) {
+    return getter(this.state)
   }
   /**
    * bind state to form input component with value/onChange/defaultValue
@@ -153,7 +165,7 @@ export default class NState<S> {
    */
   useBind<U>(getter: (s: S) => U) {
     const s = this.useState(getter) || ({} as U)
-    return <K extends keyof U>(key: K, transformer: (v: string) => U[K] = (f) => f as any) => {
+    return <K extends keyof U>(key: K, transformer: (v: any) => U[K] = (f) => f as any) => {
       return {
         defaultValue: s[key],
         value: s[key],
@@ -168,4 +180,24 @@ export default class NState<S> {
       }
     }
   }
+}
+
+class LocalStore<S> extends NState<S> {
+  setState(patch: Patch<S>) {
+    super.setState(patch)
+  }
+}
+
+/**
+ * use local store and state
+ * @param state
+ * @returns
+ */
+export function useLocalStore<T, U>(state: T, actions: (store: LocalStore<T>) => U) {
+  let store = useMemo(() => {
+    let store = new LocalStore(state)
+    return Object.assign(store, actions(store))
+  }, [])
+  const s = store.useState((s) => s)
+  return [s, store] as const
 }

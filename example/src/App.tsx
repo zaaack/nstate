@@ -1,5 +1,6 @@
 import Combine from './Combine'
 import Counter from './Counter'
+import CounterWithLocalStore from './CounterWithLocalStore'
 import Nest from './Nest'
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
       <Counter />
       <Nest />
       <Combine />
+      <CounterWithLocalStore />
     </div>
   )
 }
