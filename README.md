@@ -1,6 +1,6 @@
 # nstate
 
-[![publish](https://github.com/zaaack/nstate/actions/workflows/publish.yml/badge.svg)](https://github.com/zaaack/nstate/actions/workflows/publish.yml) [![npm](https://img.shields.io/npm/v/nstate.svg)](https://www.npmjs.com/package/nstate) [![npm](https://img.shields.io/npm/dm/nstate.svg)](https://www.npmjs.com/package/nstate)
+[![publish](https://github.com/zaaack/nstate/actions/workflows/publish.yml/badge.svg)](https://github.com/zaaack/nstate/actions/workflows/publish.yml) [![npm](https://img.shields.io/npm/v/nstate.svg)](https://www.npmjs.com/package/nstate) [![npm](https://img.shields.io/npm/dm/nstate.svg)](https://www.npmjs.com/package/nstate) [![size](https://badgen.net/bundlephobia/minzip/nstate)](https://bundlephobia.com/package/nstate)
 
 A simple but powerful react state management library with low mental load, inspired by [rko](https://github.com/steveruizok/rko).
 

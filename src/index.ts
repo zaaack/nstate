@@ -185,7 +185,7 @@ class LocalStore<S> extends NState<S> {
  * @param state
  * @returns
  */
-export function useLocalStore<T, U>(state: T, actions: (store: LocalStore<T>) => U) {
+export function useLocalStore<T, U={}>(state: T, actions: (store: LocalStore<T>) => U = s => ({} as U)) {
   let store = useMemo(() => {
     let store = new LocalStore(state)
     return Object.assign(store, actions(store))
