@@ -55,10 +55,10 @@ export default class NState<T> {
   protected setState(patch: (s: T) => Partial<T>)
   protected setState(patch: (draft: T) => void) // using immer under the hood
   watch<U>(getter: (s: T) => U, handler: (s: U) => void) // Watch deep state change, if getter return a new array(length <= 20) or object, it will be shallow equals
+  unwatch<U>(handler: (s: U) => void) // remove watch listener
   useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
   useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
   useBind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
-  useRef<U>(getter: (s: T) => U): U // use state but won't update view
 }
 
 export function useLocalStore<T, U>(state: T, actions: (store: LocalStore<T>) => U): [T, LocalStore<T> & U]

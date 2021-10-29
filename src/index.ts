@@ -22,7 +22,7 @@ export function setDebug(debug: boolean) {
 }
 
 const handlerWrapperSymbol =
-  typeof Symbol === 'undefined' ? '__HANDLER_WRAPPER__' : Symbol('handler-wrapper')
+  typeof Symbol === 'undefined' ? '__NSTATE_HANDLER_WRAPPER__' : Symbol('handler-wrapper')
 
 function bindClass(ins) {
   let parent = ins
@@ -40,14 +40,14 @@ export default class NState<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
-  private _options: Options = {}
+  private _options: Options = {debug: defaultDebug}
 
   constructor(protected state: S, name?: string | Options) {
     if (typeof name === 'string') {
-      this._options = { name, debug: defaultDebug }
+      this._options.name = name
     } else if (name) {
       this._options = {
-        debug: defaultDebug,
+        ...this._options,
         ...name,
       }
     }
@@ -148,14 +148,6 @@ export default class NState<S> {
     const [state, setState] = useState<U>(getter(this.state))
     this.useWatch(getter, setState, deps)
     return state
-  }
-  /**
-   * return the reference of state, unlike useState, it won't refresh view when state changed
-   * @param getter
-   * @returns
-   */
-  useRef<U>(getter: (s: S) => U) {
-    return getter(this.state)
   }
   /**
    * bind state to form input component with value/onChange/defaultValue
