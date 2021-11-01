@@ -2,6 +2,7 @@ import mitt from 'mitt'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
+import { bindInstance } from './bind-instance'
 
 setAutoFreeze(false)
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
@@ -20,27 +21,29 @@ let defaultDebug = false
 export function setDebug(debug: boolean) {
   defaultDebug = debug
 }
-
-const handlerWrapperSymbol =
-  typeof Symbol === 'undefined' ? '__NSTATE_HANDLER_WRAPPER__' : Symbol('handler-wrapper')
-
-function bindClass(ins) {
-  let parent = ins
-  while (parent) {
-    Object.getOwnPropertyNames(parent).forEach((key) => {
-      if (typeof ins[key] === 'function' && key !== 'constructor') {
-        ins[key] = ins[key].bind(ins)
-      }
-    })
-    parent = Object.getPrototypeOf(parent)
+const makeSymbol = (s: string) => {
+  if (typeof Symbol !== 'undefined') {
+    return Symbol(s)
   }
+  return `__NSTATE_SYMBOL_${s}__`
 }
+const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 
+const logSymbol = makeSymbol('log')
 export default class NState<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
-  private _options: Options = {debug: defaultDebug}
+  private _options: Options = { debug: defaultDebug }
+  private [logSymbol](action, fn, args) {
+    const storeName = this.constructor.name + (this._options.name ? '-' + this._options.name : '')
+    let old = this.state
+    Promise.resolve(action()).then((ret) => {
+      console.log(`%c[${storeName}] before:`, `color:#c2c217;`, old)
+      console.log(`\n%c[${storeName}] action:`, 'color:#19c217;', `${fn.name}(`,...args.slice(0, fn.length).concat(')'))
+      console.log(`\n%c[${storeName}] after:`, 'color:#17aac2;', this.state)
+    })
+  }
 
   constructor(protected state: S, name?: string | Options) {
     if (typeof name === 'string') {
@@ -51,7 +54,11 @@ export default class NState<S> {
         ...name,
       }
     }
-    bindClass(this)
+    bindInstance(
+      this,
+      Object.getOwnPropertyNames(NState.prototype),
+      this._options.debug ? this[logSymbol].bind(this) : undefined,
+    )
     setTimeout(() => {
       this.onInit()
     })
@@ -84,12 +91,6 @@ export default class NState<S> {
       }
     }
     this.events.emit('change', { patch, old })
-    if (this._options.debug) {
-      const storeName = this.constructor.name + (this._options.name ? '-' + this._options.name : '')
-      console.log(`%c[${storeName}] before:`, `color:#c2c217;`, old)
-      console.log(`\n%c[${storeName}] changed:`, 'color:#19c217;', patch)
-      console.log(`\n%c[${storeName}] after:`, 'color:#17aac2;', this.state)
-    }
   }
 
   /**
@@ -185,7 +186,10 @@ class LocalStore<S> extends NState<S> {
  * @param state
  * @returns
  */
-export function useLocalStore<T, U={}>(state: T, actions: (store: LocalStore<T>) => U = s => ({} as U)) {
+export function useLocalStore<T, U = {}>(
+  state: T,
+  actions: (store: LocalStore<T>) => U = (s) => ({} as U),
+) {
   let store = useMemo(() => {
     let store = new LocalStore(state)
     return Object.assign(store, actions(store))
