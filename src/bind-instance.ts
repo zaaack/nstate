@@ -1,7 +1,7 @@
 import NState from '.'
 
 export function bindInstance(
-  ins: NState<any>,
+  ins: any,
   excludeFns: string[] = [],
   log?: (actionCall: () => void, fn: Function, args: any[]) => void,
 ) {
@@ -21,14 +21,7 @@ export function bindInstance(
         ins[key] = (...args) => {
           if (!log) return old.apply(ins, args)
           let ret
-          log(
-            () => {
-              ret = old.apply(ins, args)
-              return ret
-            },
-            old,
-            args,
-          )
+          log(() => (ret = old.apply(ins, args)), old, args)
           return ret
         }
       }

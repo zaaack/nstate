@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import immer, { setAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 import { bindInstance } from './bind-instance'
+import { logAction } from './log'
 
 setAutoFreeze(false)
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
@@ -29,21 +30,11 @@ const makeSymbol = (s: string) => {
 }
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 
-const logSymbol = makeSymbol('log')
 export default class NState<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
   private _options: Options = { debug: defaultDebug }
-  private [logSymbol](action, fn, args) {
-    const storeName = this.constructor.name + (this._options.name ? '-' + this._options.name : '')
-    let old = this.state
-    Promise.resolve(action()).then((ret) => {
-      console.log(`%c[${storeName}] before:`, `color:#c2c217;`, old)
-      console.log(`\n%c[${storeName}] action:`, 'color:#19c217;', `${fn.name}(`,...args.slice(0, fn.length).concat(')'))
-      console.log(`\n%c[${storeName}] after:`, 'color:#17aac2;', this.state)
-    })
-  }
 
   constructor(protected state: S, name?: string | Options) {
     if (typeof name === 'string') {
@@ -57,7 +48,15 @@ export default class NState<S> {
     bindInstance(
       this,
       Object.getOwnPropertyNames(NState.prototype),
-      this._options.debug ? this[logSymbol].bind(this) : undefined,
+      this._options.debug
+        ? (call, action, args) => {
+            const storeName = `${this.constructor.name}-${this._options.name || 'default'}`
+            let oldState = this.state
+            Promise.resolve(call()).then(() => {
+              logAction(storeName, action, args, oldState, this.state)
+            })
+          }
+        : undefined,
     )
     setTimeout(() => {
       this.onInit()
@@ -160,7 +159,6 @@ export default class NState<S> {
     const s = this.useState(getter) || ({} as U)
     return <K extends keyof U>(key: K, transformer: (v: any) => U[K] = (f) => f as any) => {
       return {
-        defaultValue: s[key],
         value: s[key],
         onChange: (e: any) => {
           this.setState((d) => {
