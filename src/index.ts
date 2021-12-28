@@ -1,16 +1,28 @@
 import mitt from 'mitt'
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import immer from 'immer'
+import immer, { freeze, setAutoFreeze as immerSetAutoFreeze } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 import { bindInstance } from './bind-instance'
 import { logAction } from './log'
-export { setAutoFreeze, setUseProxies } from 'immer'
+export { setUseProxies } from 'immer'
 
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
 export type WatchHandler<U> = (newState: U, oldState: U) => void
+
+let defaultAutoFreeze = true
+/**
+ * Pass true to automatically freeze all copies created by Immer. Always freeze by default, even in production mode
+ * @param freeze
+ */
+export function setAutoFreeze(freeze: boolean) {
+  immerSetAutoFreeze(freeze)
+  defaultAutoFreeze = freeze
+}
 export interface Options {
   name?: string
   debug?: boolean
+  /** autoFreeze state, enabled by default, you can disable in production mode for better performance */
+  autoFreeze?: boolean
 }
 
 let defaultDebug = false
@@ -34,7 +46,7 @@ export default class NState<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
-  private _options: Options = { debug: defaultDebug }
+  private _options: Options = { debug: defaultDebug, autoFreeze: defaultAutoFreeze }
 
   constructor(protected state: S, name?: string | Options) {
     if (typeof name === 'string') {
@@ -87,6 +99,9 @@ export default class NState<S> {
         this.state = { ...old, ...immer(this.state, patch) }
       } else {
         this.state = { ...this.state, ...patch }
+        if (this._options.autoFreeze) {
+          this.state = freeze(this.state, true)
+        }
       }
     }
     this.events.emit('change', { patch, old })
