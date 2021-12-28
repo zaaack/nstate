@@ -1,11 +1,11 @@
 import mitt from 'mitt'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import immer, { setAutoFreeze } from 'immer'
+import immer from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 import { bindInstance } from './bind-instance'
 import { logAction } from './log'
+export { setAutoFreeze, setUseProxies } from 'immer'
 
-setAutoFreeze(false)
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
 export type WatchHandler<U> = (newState: U, oldState: U) => void
 export interface Options {
@@ -80,7 +80,7 @@ export default class NState<S> {
    */
   protected setState(patch: Patch<S>) {
     let old = this.state
-    if (typeof old !== 'object' || typeof old === 'function') {
+    if (typeof old !== 'object' || typeof old === 'function' || old === null) { // scalar or function
       this.state = patch as any
     } else {
       if (typeof patch === 'function') {
