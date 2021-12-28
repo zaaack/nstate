@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import immer from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 import { bindInstance } from './bind-instance'
@@ -132,10 +132,10 @@ export default class NState<S> {
    * @param deps
    */
   useWatch<U>(getter: (s: S) => U, handler: WatchHandler<U>, deps: any[] = []) {
-    let old = this.state
+    let old = useRef(this.state)
     useEffect(() => {
       this.watch(getter, handler)
-      let oldState = getter(old)
+      let oldState = getter(old.current)
       let newState = getter(this.state)
       if (newState !== oldState) {
         handler(newState, oldState)
