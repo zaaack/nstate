@@ -132,8 +132,14 @@ export default class NState<S> {
    * @param deps
    */
   useWatch<U>(getter: (s: S) => U, handler: WatchHandler<U>, deps: any[] = []) {
+    let old = this.state
     useEffect(() => {
       this.watch(getter, handler)
+      let oldState = getter(old)
+      let newState = getter(this.state)
+      if (newState !== oldState) {
+        handler(newState, oldState)
+      }
       return () => {
         this.unwatch(handler)
       }
