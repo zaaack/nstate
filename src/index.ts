@@ -109,7 +109,7 @@ export default class NState<S> {
         } else {
           isChanged = !shallowEqualArrays(newState, oldState)
         }
-      } else if (typeof newState === 'object' && newState !== null) {
+      } else if (typeof newState === 'object' && newState !== null && typeof oldState === 'object' && oldState !== null) {
         isChanged = !shallowEqualObjects(newState, oldState)
       } else {
         isChanged = newState !== oldState
