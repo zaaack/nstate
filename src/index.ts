@@ -92,7 +92,8 @@ export default class NState<S> {
    */
   protected setState(patch: Patch<S>) {
     let old = this.state
-    if (typeof old !== 'object' || typeof old === 'function' || old === null) { // scalar or function
+    if (typeof old !== 'object' || typeof old === 'function' || old === null) {
+      // scalar or function
       this.state = patch as any
     } else {
       if (typeof patch === 'function') {
@@ -124,7 +125,12 @@ export default class NState<S> {
         } else {
           isChanged = !shallowEqualArrays(newState, oldState)
         }
-      } else if (typeof newState === 'object' && newState !== null && typeof oldState === 'object' && oldState !== null) {
+      } else if (
+        typeof newState === 'object' &&
+        newState !== null &&
+        typeof oldState === 'object' &&
+        oldState !== null
+      ) {
         isChanged = !shallowEqualObjects(newState, oldState)
       } else {
         isChanged = newState !== oldState
@@ -178,14 +184,26 @@ export default class NState<S> {
    */
   useBind<U>(getter: (s: S) => U) {
     const s = this.useState(getter) || ({} as U)
-    return <K extends keyof U>(key: K, transformer: (v: any) => U[K] = (f) => f as any) => {
+    return <K extends keyof U>(
+      key: K,
+      transformer: (v: any) => U[K] = (f) => f as any,
+      {
+        valueKey,
+        onChangeKey,
+      }: {
+        valueKey?: string
+        onChangeKey?: string
+      },
+    ) => {
+      let isBool = typeof s[key] === 'boolean'
       return {
-        value: s[key],
-        onChange: (e: any) => {
+        [valueKey || (isBool ? 'checked' : 'value')]: s[key],
+        [onChangeKey || 'onChange']: (e: any) => {
           this.setState((d) => {
-            const value = ['checkbox', 'radio'].includes(e?.target?.type)
-              ? e.target.checked
-              : e?.target?.value ?? e
+            const value =
+              (isBool
+                ? e?.target?.checked ?? e?.target?.value
+                : e?.target?.value ?? e?.target?.checked) ?? e
             getter(d)[key] = transformer(value)
           })
         },
