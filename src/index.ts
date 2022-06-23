@@ -186,21 +186,28 @@ export default class NState<S> {
     const s = this.useState(getter) || ({} as U)
     return <K extends keyof U>(
       key: K,
-      transformer: (v: any) => U[K] = (f) => f as any) => {
-      let isBool = typeof s[key] === 'boolean'
-      return {
-        value: s[key],
-        checked: s[key],
-        onChange: (e: any) => {
-          this.setState((d) => {
-            const value =
-              (isBool
-                ? e?.target?.checked ?? e?.target?.value
-                : e?.target?.value ?? e?.target?.checked) ?? e
-            getter(d)[key] = transformer(value)
-          })
-        },
+      transformer: (v: any) => U[K] = (f) => f as any,
+    ): { value: U[K]; onChange: (e: any) => void } => {
+      const isBool = typeof s[key] === 'boolean'
+      let onChange = (e: any) => {
+        this.setState((d) => {
+          const value =
+            (isBool
+              ? e?.target?.checked ?? e?.target?.value
+              : e?.target?.value ?? e?.target?.checked) ?? e
+          getter(d)[key] = transformer(value)
+        })
       }
+      return isBool
+        ? {
+            checked: s[key],
+            value: s[key],
+            onChange,
+          } as any
+        : {
+            value: s[key],
+            onChange,
+          }
     }
   }
 }
