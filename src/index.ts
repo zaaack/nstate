@@ -193,7 +193,7 @@ export default class NState<S> {
       }: {
         valueKey?: string
         onChangeKey?: string
-      },
+      } = {},
     ) => {
       let isBool = typeof s[key] === 'boolean'
       return {
