@@ -18,6 +18,7 @@ A simple but powerful react state management library with low mental load, inspi
     - [2. Bind state field to form input with onChange/value` with type safety](#2-bind-state-field-to-form-input-with-onchangevalue-with-type-safety)
     - [3. Combine multiple store to reuse actions/views](#3-combine-multiple-store-to-reuse-actionsviews)
     - [4. useLocalStore](#4-uselocalstore)
+    - [5. useSubStore](#5-usesubstore)
   - [License](#license)
 
 ## Features
@@ -59,6 +60,8 @@ export default class NState<T> {
   useWatch<U>(getter: (s: T) => U, handler: (s: U) => void, deps?: any[]) // watch hooks wrapper for auto remove handler after unmount and auto update when deps changes
   useState<U>(getter: (s: T) => U): U // use state hook, based on `watch`, so you can return a new array/object for destructuring.
   useBind<U>(getter: (s: T) => U): <K extends keyof U>(key: K, transformer?: (v: string) => U[K]) // bind state field to form input
+  useSubStore<U>(getter: (s: T) => U, setter(s: T, u: U) => T) // create sub stores for get/set/watch, it will auto sync state to parent store
+  dispose() // clear all event listeners, for sub stores/local stores
 }
 
 export function useLocalStore<T, U>(state: T, actions: (store: LocalStore<T>) => U): [T, LocalStore<T> & U]
@@ -238,6 +241,46 @@ function CounterWithLocalStore() {
       </div>
     </div>
   )
+}
+```
+
+### 5. useSubStore
+
+```tsx
+interface Store {
+  counter1: {
+    count: number
+  }
+  counter2: {
+    count: number
+  }
+}
+export class Store extends NState<Store> {
+
+}
+export const store = new Store({ // initial state
+  counter1: {count: 1},
+  counter2: {count: 1},
+})
+
+function SubCounter({ store }) {
+  return (
+    <div>
+      <div>
+        <h2>Counter with useLocalStore</h2>
+        <p>count: {count}</p>
+        <button onClick={store.setState(s => s.count++)}>+</button>
+        <button onClick={store.setState(s => s.count--)}>-</button>
+        <button onClick={e=>store.setState(s => {
+          s.count = 0
+        })}>reset</button>
+      </div>
+    </div>
+  )
+}
+function Counter() {
+  const subStore = store.useSubStore(s => s.counter1, (s, u) => { s.counter1 = u })
+  return <SubCounter store={subStore} />
 }
 ```
 

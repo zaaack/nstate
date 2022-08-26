@@ -136,7 +136,11 @@ export default class NState<S> {
         isChanged = newState !== oldState
       }
       if (isChanged) {
-        handler(newState, oldState)
+        try {
+          handler(newState, oldState)
+        } catch (error) {
+          console.error(error)
+        }
       }
     }
     handler[handlerWrapperSymbol] = diff
@@ -199,20 +203,61 @@ export default class NState<S> {
         })
       }
       return isBool
-        ? {
+        ? ({
             checked: s[key],
             value: s[key],
             onChange,
-          } as any
+          } as any)
         : {
             value: s[key],
             onChange,
           }
     }
   }
+  /**
+   * create sub store to get/set/watch, it will auto sync state to parent store
+   * @param getter
+   * @param setter
+   * @returns
+   */
+  useSubStore<U>(getter: (s: S) => U, setter: (s: S, u: U) => S) {
+    let state = this.useState(getter)
+    let store = useMemo(() => {
+      let _store = new LocalStore<U>(state)
+      let isCycleChange = false
+      _store.onInit = () => {
+        _store.watch(
+          (s) => s,
+          (ss) => {
+            if (!isCycleChange) {
+              this.setState((s) => setter(s, ss))
+            }
+          },
+        )
+      }
+      this.watch(getter, (s) => {
+        isCycleChange = true
+        _store.setState(s)
+        isCycleChange = false
+      })
+      return _store
+    }, [])
+    useEffect(() => {
+      return () => {
+        store.dispose()
+      }
+    }, [])
+    return store
+  }
+  /**
+   * clear all event listeners
+   */
+  dispose() {
+    this.events.all.clear()
+  }
 }
 
-class LocalStore<S> extends NState<S> {
+export class LocalStore<S> extends NState<S> {
   setState(patch: Patch<S>) {
     super.setState(patch)
   }
