@@ -7,7 +7,7 @@ import { logAction } from './log'
 export { setUseProxies } from 'immer'
 
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
-export type WatchHandler<U> = (newState: U, oldState: U) => void
+export type WatchHandler<U, S> = (newState: U, oldState: U, s:S) => void
 
 let defaultAutoFreeze = true
 /**
@@ -113,7 +113,7 @@ export default class NState<S> {
    * @param getter get deep state
    * @param handler handle deep state change
    */
-  watch<U>(getter: (s: S) => U, handler: WatchHandler<U>) {
+  watch<U>(getter: (s: S) => U, handler: WatchHandler<U, S>) {
     const diff = ({ patch, old }) => {
       let newState = getter(this.state)
       let oldState = getter(old)
@@ -137,7 +137,7 @@ export default class NState<S> {
       }
       if (isChanged) {
         try {
-          handler(newState, oldState)
+          handler(newState, oldState, this.state)
         } catch (error) {
           console.error(error)
         }
@@ -147,7 +147,7 @@ export default class NState<S> {
     this.events.on('change', diff)
   }
 
-  unwatch<U>(handler: WatchHandler<U>) {
+  unwatch<U>(handler: WatchHandler<U, S>) {
     this.events.off('change', handler[handlerWrapperSymbol])
   }
   /**
@@ -156,14 +156,14 @@ export default class NState<S> {
    * @param handler
    * @param deps
    */
-  useWatch<U>(getter: (s: S) => U, handler: WatchHandler<U>, deps: any[] = []) {
+  useWatch<U>(getter: (s: S) => U, handler: WatchHandler<U, S>, deps: any[] = []) {
     let old = useRef(this.state)
     useEffect(() => {
       this.watch(getter, handler)
       let oldState = getter(old.current)
       let newState = getter(this.state)
       if (newState !== oldState) {
-        handler(newState, oldState)
+        handler(newState, oldState, this.state)
       }
       return () => {
         this.unwatch(handler)
@@ -175,7 +175,9 @@ export default class NState<S> {
    * @param getter
    * @returns
    */
-  useState<U>(getter: (s: S) => U, deps: any[] = []) {
+  useState<S>(): S
+  useState<U>(getter: (s: S) => U, deps?: any[])
+  useState<U>(getter: (s: S) => U = s => s as any, deps: any[] = []) {
     const [state, setState] = useState<U>(getter(this.state))
     this.useWatch(getter, setState, deps)
     return state
