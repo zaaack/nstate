@@ -175,7 +175,7 @@ export default class NState<S> {
    * @param getter
    * @returns
    */
-  useState<S>(): S
+  useState(): S
   useState<U>(getter: (s: S) => U, deps?: any[])
   useState<U>(getter: (s: S) => U = s => s as any, deps: any[] = []) {
     const [state, setState] = useState<U>(getter(this.state))
