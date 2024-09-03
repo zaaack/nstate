@@ -1,4 +1,4 @@
-import NState from '..'
+import Store from '..'
 import { deepEqual } from 'assert'
 import { renderHook } from '@testing-library/react-hooks'
 interface State {
@@ -8,7 +8,7 @@ interface State {
     bb: { cc: string }
   }
 }
-class Counter extends NState<State> {
+class Counter extends Store<State> {
 
   getState() {
     return this.state

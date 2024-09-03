@@ -1,10 +1,10 @@
 import mitt from 'mitt'
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import immer, { freeze, setAutoFreeze as immerSetAutoFreeze } from 'immer'
+import { freeze, setAutoFreeze as immerSetAutoFreeze, produce } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
 import { bindInstance } from './bind-instance'
 import { logAction } from './log'
-export { setUseProxies } from 'immer'
+export { setUseStrictShallowCopy } from 'immer'
 
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
 export type WatchHandler<U, S> = (newState: U, oldState: U, s:S) => void
@@ -42,7 +42,7 @@ const makeSymbol = (s: string) => {
 }
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 
-export default class NState<S> {
+export default class Store<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
@@ -59,7 +59,7 @@ export default class NState<S> {
     }
     bindInstance(
       this,
-      Object.getOwnPropertyNames(NState.prototype),
+      Object.getOwnPropertyNames(Store.prototype),
       this._options.debug
         ? (call, action, args) => {
             const storeName = `${this.constructor.name}-${this._options.name || 'default'}`
@@ -97,7 +97,7 @@ export default class NState<S> {
       this.state = patch as any
     } else {
       if (typeof patch === 'function') {
-        this.state = { ...old, ...immer(this.state, patch) }
+        this.state = { ...old, ...produce(this.state, patch) }
       } else {
         this.state = { ...this.state, ...patch }
         if (this._options.autoFreeze) {
@@ -188,7 +188,8 @@ export default class NState<S> {
    * @param key
    * @returns
    */
-  useBind<U>(getter: (s: S) => U) {
+  useBind<S>()
+  useBind<U>(getter: (s: S) => U= f=> f as any) {
     const s = this.useState(getter) || ({} as U)
     return <K extends keyof U>(
       key: K,
@@ -258,8 +259,8 @@ export default class NState<S> {
     this.events.all.clear()
   }
 }
-
-export class LocalStore<S> extends NState<S> {
+export { Store }
+export class LocalStore<S> extends Store<S> {
   setState(patch: Patch<S>) {
     super.setState(patch)
   }
@@ -274,10 +275,10 @@ export function useLocalStore<T, U = {}>(
   state: T,
   actions: (store: LocalStore<T>) => U = (s) => ({} as U),
 ) {
-  let store = useMemo(() => {
-    let store = new LocalStore(state)
-    return Object.assign(store, actions(store))
+  let store: LocalStore<T> & U = useMemo(() => {
+    let storeInner = new LocalStore(state)
+    return Object.assign(storeInner, actions(storeInner))
   }, [])
-  const s = store.useState((s) => s)
+  const s:T = store.useState((s) => s)
   return [s, store] as const
 }

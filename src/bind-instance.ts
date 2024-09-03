@@ -1,4 +1,4 @@
-import NState from '.'
+import Store from '.'
 
 export function bindInstance(
   ins: any,
