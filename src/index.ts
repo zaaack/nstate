@@ -41,7 +41,10 @@ const makeSymbol = (s: string) => {
   return `__NSTATE_SYMBOL_${s}__`
 }
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
-
+export type Bind<U> = <K extends keyof U>(
+  key: K,
+  transformer: (v: any) => U[K],
+) => { value: U[K]; onChange: (e: any) => void }
 export default class Store<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
@@ -192,9 +195,10 @@ export default class Store<S> {
    * @param key
    * @returns
    */
-  useBind<S>()
-  useBind<U>(getter: (s: S) => U= f=> f as any) {
-    const s = this.useState(getter) || ({} as U)
+  useBind(): Bind<S>;
+  useBind<U>(getter: (s: S) => U): Bind<U>
+  useBind<U>(getter?: (s: S) => U): Bind<U> {
+    const s = this.useState(getter ||(f=>f as any)) || ({} as U)
     return <K extends keyof U>(
       key: K,
       transformer: (v: any) => U[K] = (f) => f as any,
@@ -206,7 +210,7 @@ export default class Store<S> {
             (isBool
               ? e?.target?.checked ?? e?.target?.value
               : e?.target?.value ?? e?.target?.checked) ?? e
-          getter(d)[key] = transformer(value)
+          ;(getter?.(d) ?? (d as any as U))[key] = transformer(value)
         })
       }
       return isBool
