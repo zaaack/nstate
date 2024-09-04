@@ -14,7 +14,8 @@
     "postpublish": "git push origin master --tags"
   },
   "files": [
-    "lib"
+    "lib",
+    "es"
   ],
   "repository": {
     "type": "git",

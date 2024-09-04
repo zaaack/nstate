@@ -9,7 +9,7 @@ export { setUseStrictShallowCopy } from 'immer'
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
 export type WatchHandler<U, S> = (newState: U, oldState: U, s:S) => void
 
-let defaultAutoFreeze = true
+let defaultAutoFreeze = false
 /**
  * Pass true to automatically freeze all copies created by Immer. Always freeze by default, even in production mode
  * @param freeze
@@ -46,9 +46,13 @@ export default class Store<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
   }>()
+  protected state: S
   private _options: Options = { debug: defaultDebug, autoFreeze: defaultAutoFreeze }
 
-  constructor(protected state: S, name?: string | Options) {
+  constructor(state?: S, name?: string | Options) {
+    if (state) {
+      this.state ??= state
+    }
     if (typeof name === 'string') {
       this._options.name = name
     } else if (name) {
@@ -147,7 +151,7 @@ export default class Store<S> {
     this.events.on('change', diff)
   }
 
-  unwatch<U>(handler: WatchHandler<U, S>) {
+  unWatch<U>(handler: WatchHandler<U, S>) {
     this.events.off('change', handler[handlerWrapperSymbol])
   }
   /**
@@ -166,7 +170,7 @@ export default class Store<S> {
         handler(newState, oldState, this.state)
       }
       return () => {
-        this.unwatch(handler)
+        this.unWatch(handler)
       }
     }, deps)
   }
@@ -176,8 +180,8 @@ export default class Store<S> {
    * @returns
    */
   useState(): S
-  useState<U>(getter: (s: S) => U, deps?: any[])
-  useState<U>(getter: (s: S) => U = s => s as any, deps: any[] = []) {
+  useState<U>(getter: (s: S) => U, deps?: any[]): U
+  useState<U>(getter: (s: S) => U = s => s as any, deps: any[] = []): U {
     const [state, setState] = useState<U>(getter(this.state))
     this.useWatch(getter, setState, deps)
     return state
