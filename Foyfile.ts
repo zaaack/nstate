@@ -5,7 +5,7 @@ setGlobalOptions({ loading: false, strict: true })
 task('build', async (ctx) => {
   await fs.rmrf('./esm')
   await fs.rmrf('./cjs')
-  await Promise.all([ctx.exec('tsc'), ctx.exec('tsc -m esnext --outDir esm')])
+  await Promise.all([ctx.exec('tsc --outDir cjs'), ctx.exec('tsc -m esnext --outDir esm')])
 })
 
 task('test', async (ctx) => {
