@@ -2,7 +2,7 @@ import mitt from 'mitt'
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { freeze, setAutoFreeze as immerSetAutoFreeze, produce } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
-import { logAction } from './log'
+import { logAction } from './log.js'
 import { bindInstance } from './bind-instance.js'
 export { setUseStrictShallowCopy } from 'immer'
 

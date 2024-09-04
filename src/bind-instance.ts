@@ -1,4 +1,3 @@
-import Store from '.'
 
 export function bindInstance(
   ins: any,
