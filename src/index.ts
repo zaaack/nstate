@@ -2,8 +2,8 @@ import mitt from 'mitt'
 import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { freeze, setAutoFreeze as immerSetAutoFreeze, produce } from 'immer'
 import { shallowEqualArrays, shallowEqualObjects } from 'shallow-equal'
-import { bindInstance } from './bind-instance'
 import { logAction } from './log'
+import { bindInstance } from './bind-instance.js'
 export { setUseStrictShallowCopy } from 'immer'
 
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
@@ -43,7 +43,7 @@ const makeSymbol = (s: string) => {
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 export type Bind<U> = <K extends keyof U>(
   key: K,
-  transformer: (v: any) => U[K],
+  transformer?: (v: any) => U[K],
 ) => { value: U[K]; onChange: (e: any) => void }
 export default class Store<S> {
   protected events = mitt<{

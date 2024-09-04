@@ -1,9 +1,11 @@
-import { task, setGlobalOptions, option } from 'foy'
+import { task, setGlobalOptions, option, fs } from 'foy'
 
 setGlobalOptions({ loading: false, strict: true })
 
 task('build', async (ctx) => {
-  await Promise.all([ctx.exec('tsc'), ctx.exec('tsc -m esnext --outDir es')])
+  await fs.rmrf('./esm')
+  await fs.rmrf('./cjs')
+  await Promise.all([ctx.exec('tsc'), ctx.exec('tsc -m esnext --outDir esm')])
 })
 
 task('test', async (ctx) => {

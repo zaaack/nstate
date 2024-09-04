@@ -59,6 +59,8 @@ typings/
 
 /lib/
 /es/
+/cjs/
+/esm/
 /dist/
 /examples/**/static/dist/bundle*
 /examples/**/static/dist/0*
