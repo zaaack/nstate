@@ -1,5 +1,6 @@
 import Store from '..'
 import { deepEqual } from 'assert'
+import {describe,it} from 'node:test'
 import { renderHook } from '@testing-library/react-hooks'
 interface State {
   counter: number

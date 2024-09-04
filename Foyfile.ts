@@ -10,11 +10,11 @@ task('build', async (ctx) => {
 
 task('test', async (ctx) => {
   console.log('test')
-  await ctx.exec(`jasmine --require=ts-node/register "./src/test/**.test.ts"`)
+  await ctx.exec(`tsx --test ./src/test`)
 })
 
 option('-t, --type <val>', 'type', { default: 'patch' })
-task<{ type: string }>('publish', async (ctx) => {
+task<{ type: string }>('publish',['test'.async(), 'build'.async()], async (ctx) => {
   await ctx.exec([
     `npm version ${ctx.options.type || 'patch'}`,
     'npm publish --registry=https://registry.npmjs.org/ --access public',

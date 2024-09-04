@@ -10,14 +10,19 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./esm/index.js",
-      "require": "./cjs/index.js"
+      "import": {
+        "default": "./esm/index.js",
+        "types": "./esm/index.d.ts"
+      },
+      "require": {
+        "default": "./cjs/index.js",
+        "types": "./cjs/index.d.ts"
+      }
     }
   },
   "scripts": {
     "build": "foy build",
     "test": "foy test",
-    "preversion": "foy test && foy build",
     "postpublish": "git push origin master --tags"
   },
   "files": [
@@ -43,10 +48,8 @@
   "homepage": "https://github.com/zaaack/nstate#readme",
   "devDependencies": {
     "@testing-library/react-hooks": "^8.0.1",
-    "@types/jasmine": "^5.1.4",
     "@types/node": "^22.5.2",
     "foy": "^0.2.33",
-    "jasmine": "^5.2.0",
     "react": "^18.3.1",
     "react-test-renderer": "^18.3.1",
     "tsx": "^4.19.0",
