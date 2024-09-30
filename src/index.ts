@@ -43,8 +43,11 @@ const makeSymbol = (s: string) => {
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 export type Bind<U> = <K extends keyof U>(
   key: K,
-  transformer?: (v: any) => U[K],
-) => { value: U[K]; onChange: (e: any) => void }
+  opts?:{
+    fromEventData?: (v: unknown) => U[K],
+    toEventData?:  (v: U[K]) => unknown,
+  }
+) => { value: U[K]; onChange: (e: U[K]) => void }
 export default class Store<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
@@ -199,10 +202,10 @@ export default class Store<S> {
   useBind<U>(getter: (s: S) => U): Bind<U>
   useBind<U>(getter?: (s: S) => U): Bind<U> {
     const s = this.useState(getter ||(f=>f as any)) || ({} as U)
-    return <K extends keyof U>(
+    return (<K extends keyof U>(
       key: K,
-      transformer: (v: any) => U[K] = (f) => f as any,
-    ): { value: U[K]; onChange: (e: any) => void } => {
+      opts: Parameters<Bind<U>>[1] = {},
+    ) => {
       const isBool = typeof s[key] === 'boolean'
       let onChange = (e: any) => {
         this.setState((d) => {
@@ -210,25 +213,27 @@ export default class Store<S> {
             (isBool
               ? e?.target?.checked ?? e?.target?.value
               : e?.target?.value ?? e?.target?.checked) ?? e
-          ;(getter?.(d) ?? (d as any as U))[key] = transformer(value)
+          ;(getter?.(d) ?? (d as any as U))[key] = opts.fromEventData?opts.fromEventData(value) : value
         })
       }
+      let value = opts.toEventData ? opts.toEventData(s[key]) : s[key]
       return isBool
         ? ({
-            checked: s[key],
-            value: s[key],
+            checked: value,
+            value,
             onChange,
           } as any)
         : {
-            value: s[key],
+            value,
             onChange,
           }
-    }
+    })
   }
   /**
    * create sub store to get/set/watch, it will auto sync state to parent store
    * @param getter
    * @param setter
+   * @deprecated
    * @returns
    */
   useSubStore<U>(getter: (s: S) => U, setter: (s: S, u: U) => S) {

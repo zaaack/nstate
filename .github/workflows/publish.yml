@@ -8,12 +8,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: setup Node.js
-        uses: actions/setup-node@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '14.x'
+          node-version: 20
+          cache: 'pnpm'
       - name: install
-        run: pnpm
+        run: pnpm i
       - name: test
         run: pnpm test
