@@ -10,7 +10,7 @@ task('build', async (ctx) => {
 
 task('test', async (ctx) => {
   console.log('test')
-  await ctx.exec(`tsx --test ./src/test`)
+  await ctx.exec(`tsx --test ./src/test/**.test.ts`)
 })
 
 option('-t, --type <val>', 'type', { default: 'patch' })

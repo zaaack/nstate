@@ -11,12 +11,12 @@
   "exports": {
     ".": {
       "import": {
-        "default": "./esm/index.js",
-        "types": "./esm/index.d.ts"
+        "types": "./esm/index.d.ts",
+        "default": "./esm/index.js"
       },
       "require": {
-        "default": "./cjs/index.js",
-        "types": "./cjs/index.d.ts"
+        "types": "./cjs/index.d.ts",
+        "default": "./cjs/index.js"
       }
     }
   },
