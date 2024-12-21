@@ -44,10 +44,10 @@ const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 export type Bind<U> = <K extends keyof U>(
   key: K,
   opts?:{
-    fromEventData?: (v: unknown) => U[K],
-    toEventData?:  (v: U[K]) => unknown,
+    fromValue?: (v: unknown) => U[K],
+    toValue?:  (v: U[K]) => unknown,
   }
-) => { value: U[K]; onChange: (e: U[K]) => void }
+) => { value: any; onChange: (e: any) => void }
 export default class Store<S> {
   protected events = mitt<{
     change: { patch: any; old: S }
@@ -213,10 +213,11 @@ export default class Store<S> {
             (isBool
               ? e?.target?.checked ?? e?.target?.value
               : e?.target?.value ?? e?.target?.checked) ?? e
-          ;(getter?.(d) ?? (d as any as U))[key] = opts.fromEventData?opts.fromEventData(value) : value
+          ;(getter?.(d) ?? (d as any as U))[key] =
+            opts.fromValue ? opts.fromValue(value) : value
         })
       }
-      let value = opts.toEventData ? opts.toEventData(s[key]) : s[key]
+      let value = opts.toValue ? opts.toValue(s[key]) : s[key]
       return isBool
         ? ({
             checked: value,
