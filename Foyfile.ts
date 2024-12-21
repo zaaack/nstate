@@ -18,5 +18,6 @@ task<{ type: string }>('publish',['test'.async(), 'build'.async()], async (ctx) 
   await ctx.exec([
     `npm version ${ctx.options.type || 'patch'}`,
     'npm publish --registry=https://registry.npmjs.org/ --access public',
+    'git push origin master --tags',
   ])
 })

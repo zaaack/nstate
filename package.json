@@ -22,8 +22,7 @@
   },
   "scripts": {
     "build": "foy build",
-    "test": "foy test",
-    "postpublish": "git push origin master --tags"
+    "test": "foy test"
   },
   "files": [
     "cjs",
