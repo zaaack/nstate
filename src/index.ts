@@ -291,8 +291,9 @@ export function useLocalStore<T, U = {}>(
 ) {
   let store: LocalStore<T> & U = useMemo(() => {
     let storeInner = new LocalStore(state)
-    return Object.assign(storeInner, actions(storeInner))
+    return storeInner
   }, [])
+  Object.assign(store, actions(store))
   const s:T = store.useState((s) => s)
   return [s, store] as const
 }
