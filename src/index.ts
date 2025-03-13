@@ -7,7 +7,7 @@ import { bindInstance } from './bind-instance.js'
 export { setUseStrictShallowCopy } from 'immer'
 
 export type Patch<T> = Partial<T> | ((s: T) => Partial<T> | void)
-export type WatchHandler<U, S> = (newState: U, oldState: U, s:S) => void
+export type WatchHandler<U, S> = (newState: U, oldState: U, patch: Partial<S>) => void
 
 let defaultAutoFreeze = false
 /**
@@ -43,10 +43,10 @@ const makeSymbol = (s: string) => {
 const handlerWrapperSymbol = makeSymbol('handler-wrapper')
 export type Bind<U> = <K extends keyof U>(
   key: K,
-  opts?:{
-    fromValue?: (v: unknown) => U[K],
-    toValue?:  (v: U[K]) => unknown,
-  }
+  opts?: {
+    fromValue?: (v: unknown) => U[K]
+    toValue?: (v: U[K]) => unknown
+  },
 ) => { value: any; onChange: (e: any) => void }
 export default class Store<S> {
   protected events = mitt<{
@@ -56,9 +56,7 @@ export default class Store<S> {
   private _options: Options = { debug: defaultDebug, autoFreeze: defaultAutoFreeze }
 
   constructor(state?: S, name?: string | Options) {
-    if (state) {
-      this.state ??= state
-    }
+    this.state = state ?? this.state
     if (typeof name === 'string') {
       this._options.name = name
     } else if (name) {
@@ -70,15 +68,23 @@ export default class Store<S> {
     bindInstance(
       this,
       Object.getOwnPropertyNames(Store.prototype),
-      this._options.debug
-        ? (call, action, args) => {
-            const storeName = `${this.constructor.name}-${this._options.name || 'default'}`
-            let oldState = this.state
-            Promise.resolve(call()).then(() => {
+
+      (call, action, args) => {
+        if (this._options.debug) {
+          const storeName = `${this.constructor.name}-${this._options.name || 'default'}`
+          let oldState = this.state
+          let ret = call()
+          if (ret && ret.then) {
+            return ret.then((r) => {
               logAction(storeName, action, args, oldState, this.state)
+              return r
             })
           }
-        : undefined,
+          return ret
+        }
+        return call()
+      },
+      this._options.debug
     )
     setTimeout(() => {
       this.onInit()
@@ -147,7 +153,7 @@ export default class Store<S> {
       }
       if (isChanged) {
         try {
-          handler(newState, oldState, this.state)
+          handler(newState, oldState, patch)
         } catch (error) {
           console.error(error)
         }
@@ -187,7 +193,7 @@ export default class Store<S> {
    */
   useState(): S
   useState<U>(getter: (s: S) => U, deps?: any[]): U
-  useState<U>(getter: (s: S) => U = s => s as any, deps: any[] = []): U {
+  useState<U>(getter: (s: S) => U = (s) => s as any, deps: any[] = []): U {
     const [state, setState] = useState<U>(getter(this.state))
     this.useWatch(getter, setState, deps)
     return state
@@ -198,14 +204,11 @@ export default class Store<S> {
    * @param key
    * @returns
    */
-  useBind(): Bind<S>;
+  useBind(): Bind<S>
   useBind<U>(getter: (s: S) => U): Bind<U>
   useBind<U>(getter?: (s: S) => U): Bind<U> {
-    const s = this.useState(getter ||(f=>f as any)) || ({} as U)
-    return (<K extends keyof U>(
-      key: K,
-      opts: Parameters<Bind<U>>[1] = {},
-    ) => {
+    const s = this.useState(getter || ((f) => f as any)) || ({} as U)
+    return <K extends keyof U>(key: K, opts: Parameters<Bind<U>>[1] = {}) => {
       const isBool = typeof s[key] === 'boolean'
       let onChange = (e: any) => {
         this.setState((d) => {
@@ -213,8 +216,7 @@ export default class Store<S> {
             (isBool
               ? e?.target?.checked ?? e?.target?.value
               : e?.target?.value ?? e?.target?.checked) ?? e
-          ;(getter?.(d) ?? (d as any as U))[key] =
-            opts.fromValue ? opts.fromValue(value) : value
+          ;(getter?.(d) ?? (d as any as U))[key] = opts.fromValue ? opts.fromValue(value) : value
         })
       }
       let value = opts.toValue ? opts.toValue(s[key]) : s[key]
@@ -228,7 +230,7 @@ export default class Store<S> {
             value,
             onChange,
           }
-    })
+    }
   }
   /**
    * create sub store to get/set/watch, it will auto sync state to parent store
@@ -294,6 +296,6 @@ export function useLocalStore<T, U = {}>(
     return storeInner
   }, [])
   Object.assign(store, actions(store))
-  const s:T = store.useState((s) => s)
+  const s: T = store.useState((s) => s)
   return [s, store] as const
 }
