@@ -160,6 +160,7 @@ export default class Store<S> {
       }
     }
     handler[handlerWrapperSymbol] = diff
+    diff.name=`diff(${handler.name})`
     this.events.on('change', diff)
   }
 
