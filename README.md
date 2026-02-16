@@ -39,6 +39,13 @@ A simple but powerful react state management library with low mental load, inspi
 yarn add nstate # or npm i nstate
 ```
 
+## Using with AI agent
+
+```sh
+npx skills add https://github.com/zaaack/prompts --skill nstate
+
+```
+
 
 ## API
 
